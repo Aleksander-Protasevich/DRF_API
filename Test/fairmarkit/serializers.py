@@ -1,5 +1,6 @@
 from rest_framework_json_api import serializers
 from .models import Author, Book
+from django.db.models import Count
 
 
 class BookSerializer(serializers.HyperlinkedModelSerializer):
@@ -13,8 +14,13 @@ class AuthorSerializer(serializers.HyperlinkedModelSerializer):
         model = Author
         fields = ('name',)
 
+class GenreSerializer(serializers.ModelSerializer):
+    books_in_genre = serializers.SerializerMethodField('book_genre')
 
-class GenreSerializer(serializers.HyperlinkedModelSerializer):
+    def book_genre(self, obj):
+        set = list(Book.objects.values("genre").annotate(num_books= Count("genre")).order_by())
+        return set
+
     class Meta:
         model = Book
-        fields = ('genre',)
+        fields = ('books_in_genre',)
